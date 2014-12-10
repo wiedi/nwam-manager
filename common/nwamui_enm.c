@@ -445,11 +445,13 @@ get_nwam_enm_string_array_prop( nwam_enm_handle_t enm, const char* prop_name )
     }
 
     if ( value != NULL && num > 0 ) {
+        int i;
+
         /* Create a NULL terminated list of stirngs, allocate 1 extra place
          * for NULL termination. */
         retval = (gchar**)g_malloc0( sizeof(gchar*) * (num+1) );
 
-        for (int i = 0; i < num; i++ ) {
+        for (i = 0; i < num; i++ ) {
             retval[i]  = g_strdup ( value[i] );
         }
         retval[num]=NULL;

@@ -1216,11 +1216,13 @@ get_nwam_loc_string_array_prop( nwam_loc_handle_t loc, const char* prop_name )
     }
 
     if ( value != NULL && num > 0 ) {
+        int i;
+
         /* Create a NULL terminated list of stirngs, allocate 1 extra place
          * for NULL termination. */
         retval = (gchar**)g_malloc0( sizeof(gchar*) * (num+1) );
 
-        for (int i = 0; i < num; i++ ) {
+        for ( i = 0; i < num; i++ ) {
             retval[i]  = g_strdup ( value[i] );
         }
         retval[num]=NULL;
@@ -1430,6 +1432,7 @@ get_nwam_loc_uint64_array_prop( nwam_loc_handle_t loc, const char* prop_name , g
     uint64_t           *value = NULL;
     uint_t              num = 0;
     guint64            *retval = NULL;
+    int                 i;
 
     g_return_val_if_fail( prop_name != NULL && out_num != NULL, retval );
 
@@ -1450,7 +1453,7 @@ get_nwam_loc_uint64_array_prop( nwam_loc_handle_t loc, const char* prop_name , g
     }
 
     retval = (guint64*)g_malloc( sizeof(guint64) * num );
-    for ( int i = 0; i < num; i++ ) {
+    for ( i = 0; i < num; i++ ) {
         retval[i] = (guint64)value[i];
     }
 
@@ -1503,9 +1506,10 @@ static GList*
 convert_name_services_uint64_array_to_glist( guint64* ns_list, guint count )
 {
     GList*  new_list = NULL;
+    int     i;
 
     if ( ns_list != NULL ) {
-        for ( int i = 0; i < count; i++ ) {
+        for ( i = 0; i < count; i++ ) {
             /* Right now there is a 1-1 mapping between enums, so no real
              * conversion needed, just store the value */
             new_list = g_list_append( new_list, (gpointer)ns_list[i] );
@@ -1523,11 +1527,12 @@ convert_name_services_glist_to_unint64_array( GList* ns_glist, guint *count )
     if ( ns_glist != NULL && count != NULL ) {
         int     list_len = g_list_length( ns_glist );
         int     i = 0;
+        GList  *element;
 
         ns_list = (guint64*)g_malloc0( sizeof(guint64) * (list_len) );
 
         i = 0;
-        for ( GList *element  = g_list_first( ns_glist );
+        for ( element  = g_list_first( ns_glist );
               element != NULL;
               element = g_list_next( element ) ) {
             guint64 ns = (guint64) element->data;

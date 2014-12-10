@@ -606,6 +606,7 @@ nwam_conf_ip_panel_init(NwamConnConfIPPanel *self)
     /* Populate contensts of no_preferred_networks_combo */
     {
         GtkTreeModel    *model = gtk_combo_box_get_model(self->prv->no_preferred_networks_combo);
+        int  i;
 
         if ( GTK_IS_LIST_STORE( model ) ) {
             gtk_list_store_clear( GTK_LIST_STORE( model ) );
@@ -614,7 +615,7 @@ nwam_conf_ip_panel_init(NwamConnConfIPPanel *self)
             gtk_tree_store_clear( GTK_TREE_STORE( model ) );
         }
 
-        for ( int i = NWAMUI_NO_FAV_ACTION_NONE; i < NWAMUI_NO_FAV_ACTION_LAST; i++ ) {
+        for ( i = NWAMUI_NO_FAV_ACTION_NONE; i < NWAMUI_NO_FAV_ACTION_LAST; i++ ) {
             const gchar* str = nwamui_prof_get_no_fav_action_string( i );
 
             if ( str != NULL ) {

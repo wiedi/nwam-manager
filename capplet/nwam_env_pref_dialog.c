@@ -906,7 +906,8 @@ populate_panels_from_env( NwamEnvPrefDialog* self, NwamuiEnv* current_env)
 
     {
         nwamui_env_nameservices_t service;
-        for (GList* elem = g_list_first(nameservices);
+        GList *elem;
+        for (elem = g_list_first(nameservices);
              elem != NULL;
              elem = g_list_next(elem) ) {
             service = (nwamui_env_nameservices_t)elem->data;
@@ -1474,6 +1475,7 @@ on_ns_selection_clicked(GtkButton *button, gpointer user_data)
     NwamEnvPrefDialog          *self = NWAM_ENV_PREF_DIALOG(user_data);
 	NwamEnvPrefDialogPrivate   *prv = GET_PRIVATE(user_data);
     gboolean                    active = gtk_toggle_button_get_active(GTK_TOGGLE_BUTTON(button));
+    GList                      *elem;
     GList                      *nameservices = nwamui_env_get_nameservices( prv->selected_env );
     gboolean                    files = FALSE; /* Which service is being actioned */
     gboolean                    dns = FALSE;
@@ -1514,7 +1516,7 @@ on_ns_selection_clicked(GtkButton *button, gpointer user_data)
         ldap = TRUE;
     }
 
-    for (GList* elem = g_list_first(nameservices);
+    for (elem = g_list_first(nameservices);
          elem != NULL; /* no increment here */) {
         nwamui_env_nameservices_t service = (nwamui_env_nameservices_t)elem->data;
         gboolean                  remove_element = FALSE;
@@ -2066,9 +2068,10 @@ apply(NwamPrefIFace *iface, gpointer user_data)
         gchar  *config_file;
         gint    num_services = 0;
         gboolean    check_default_domain = FALSE;
+	GList* elem;
 
         /* DNS Servers */
-        for ( GList* elem =  nwamui_env_get_nameservices( current_env );
+        for ( elem =  nwamui_env_get_nameservices( current_env );
                 elem != NULL; elem = g_list_next(elem) ) {
             switch ( (nwamui_env_nameservices_t)elem->data ) {
                 case NWAMUI_ENV_NAMESERVICES_DNS:

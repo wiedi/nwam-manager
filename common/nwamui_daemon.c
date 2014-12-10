@@ -486,6 +486,7 @@ nwamui_daemon_finalize (NwamuiDaemon *self)
     int             retval;
     int             err;
     nwam_error_t    nerr;
+    gint            i;
     
     nwamui_daemon_nwam_disconnect();
 
@@ -497,7 +498,7 @@ nwamui_daemon_finalize (NwamuiDaemon *self)
         g_object_unref( G_OBJECT(prv->active_env) );
     }
 
-    for (gint i = 0; i < N_MANAGED; i++) {
+    for (i = 0; i < N_MANAGED; i++) {
         if (prv->managed_list[i]) {
             g_list_foreach(prv->managed_list[i], nwamui_util_obj_unref, NULL);
             g_list_free(prv->managed_list[i]);
@@ -1083,12 +1084,15 @@ nwamui_object_real_commit(NwamuiObject *object)
 {
     NwamuiDaemon *daemon = NWAMUI_DAEMON(object);
     gboolean      rval   = TRUE;
+    gint          i;
 
     g_return_val_if_fail (NWAMUI_IS_DAEMON(object), FALSE);
 
     /* Commit changed objects. */
-    for (gint i = 0; rval && i < N_MANAGED; i++) {
-        for (GList* idx = daemon->prv->managed_list[i]; idx; idx = g_list_next(idx)) {
+    for (i = 0; rval && i < N_MANAGED; i++) {
+        GList *idx;
+
+        for (idx = daemon->prv->managed_list[i]; idx; idx = g_list_next(idx)) {
             NwamuiObject *child = NWAMUI_OBJECT(idx->data);
 
             if (nwamui_object_has_modifications(child) && !nwamui_object_commit(child)) {
@@ -1130,11 +1134,12 @@ compare_strength( const void *p1, const void *p2 )
 static nwam_wlan_t**
 sort_wlan_array_by_strength( uint_t nwlan, nwam_wlan_t *wlans )
 {
+    int i;
     nwam_wlan_t **sorted_wlans = g_malloc0( sizeof(nwam_wlan_t*) * nwlan );
 
     g_return_val_if_fail( sorted_wlans != NULL, NULL );
 
-    for ( int i = 0; i < nwlan; i++ ) {
+    for ( i = 0; i < nwlan; i++ ) {
         sorted_wlans[i] = &wlans[i];
     }
     qsort((void*)sorted_wlans, nwlan, sizeof(nwam_wlan_t*), compare_strength);
@@ -1196,10 +1201,11 @@ dispatch_scan_results_from_wlan_array( NwamuiDaemon *daemon, NwamuiNcu* ncu,  ui
     if (nwlan > 0 && wlans != NULL) {
         nwam_wlan_t   **sorted_wlans = NULL;
         NwamuiWifiNet  *wifi_net     = NULL;
+        int i;
 
         sorted_wlans = sort_wlan_array_by_strength( nwlan, wlans );
 
-        for (int i = 0; i < nwlan; i++) {
+        for (i = 0; i < nwlan; i++) {
             nwam_wlan_t* wlan_p = sorted_wlans[i];
 
             g_debug("- %3d: %s%s ESSID %s BSSID %s", i + 1,

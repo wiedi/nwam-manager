@@ -301,6 +301,7 @@ nwam_wireless_dialog_init (NwamWirelessDialog *self)
 {
     GtkTreeModel    *model = NULL;
     GtkListStore    *bssid_list_store = NULL;
+    int              i;
     
     self->prv = g_new0 (NwamWirelessDialogPrivate, 1);
     
@@ -375,14 +376,14 @@ nwam_wireless_dialog_init (NwamWirelessDialog *self)
     /* Initialise list of security types */
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(self->prv->security_combo));
     gtk_list_store_clear (GTK_LIST_STORE (model)); /* Empry existing list */
-    for (int i = 0; i < NWAMUI_WIFI_SEC_LAST; i++) {
+    for (i = 0; i < NWAMUI_WIFI_SEC_LAST; i++) {
         gtk_combo_box_append_text(GTK_COMBO_BOX(self->prv->security_combo), nwamui_util_wifi_sec_to_string( i ));
     }
     
     /* Initialise list of WPA Config Types */
     model = gtk_combo_box_get_model(GTK_COMBO_BOX(self->prv->wpa_config_combo));
     gtk_list_store_clear (GTK_LIST_STORE (model)); /* Empry existing list */
-    for (int i = 0; i < NWAMUI_WIFI_WPA_CONFIG_LAST; i++) {
+    for (i = 0; i < NWAMUI_WIFI_WPA_CONFIG_LAST; i++) {
         gtk_combo_box_append_text(GTK_COMBO_BOX(self->prv->wpa_config_combo), nwamui_util_wifi_wpa_config_to_string( i ));
     }
     
@@ -1120,13 +1121,14 @@ nwam_wireless_dialog_set_bssid_list (NwamWirelessDialog  *self,
 {
     GtkTreeModel   *model = NULL;
     GtkTreeIter     iter;
+    GList          *elem;
 
     g_return_if_fail (NWAM_IS_WIRELESS_DIALOG (self));
 
     model = gtk_tree_view_get_model (self->prv->bssid_list_tv);
     gtk_list_store_clear( GTK_LIST_STORE(model) );
 
-    for ( GList* elem = g_list_first( bssid_list );
+    for ( elem = g_list_first( bssid_list );
           elem != NULL;
           elem = g_list_next(elem) ) {
         gtk_list_store_append(GTK_LIST_STORE(model), &iter );
@@ -1420,7 +1422,9 @@ validate_information( NwamWirelessDialog* self )
         const gchar * essid = gtk_entry_get_text(GTK_ENTRY(self->prv->essid_cbentry)); 
 
         if (essid != NULL && strlen(essid) > 0 ) {
-            for ( const char *c = essid; c != NULL && *c != '\0'; c++ ) {
+            const char *c;
+
+            for ( c = essid; c != NULL && *c != '\0'; c++ ) {
                 if ( !g_ascii_isprint( *c ) ) {
                     return( _("The Wireless network name (ESSID) contains invalid (non-ASCII) characters.") );
                 }
@@ -1492,10 +1496,11 @@ validate_information( NwamWirelessDialog* self )
                     if ( rval == NULL ) {
                         guint        len;
                         gboolean     is_all_hex;
+                        int          i;
 
                         len = strlen( key );
                         is_all_hex = TRUE;
-                        for ( int i  = 0; i < len; i++ ) {
+                        for ( i  = 0; i < len; i++ ) {
                             if ( !g_ascii_isxdigit( key[i] ) ) {
                                 is_all_hex = FALSE;
                             }

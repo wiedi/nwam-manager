@@ -837,11 +837,13 @@ get_nwam_known_wlan_string_array_prop( nwam_known_wlan_handle_t known_wlan, cons
     }
 
     if ( value != NULL && num > 0 ) {
+        int i;
+
         /* Create a NULL terminated list of stirngs, allocate 1 extra place
          * for NULL termination. */
         retval = (gchar**)g_malloc0( sizeof(gchar*) * (num+1) );
 
-        for (int i = 0; i < num; i++ ) {
+        for (i = 0; i < num; i++ ) {
             retval[i]  = g_strdup ( value[i] );
         }
         retval[num]=NULL;
@@ -1017,6 +1019,7 @@ get_nwam_known_wlan_uint64_array_prop( nwam_known_wlan_handle_t known_wlan, cons
     uint64_t           *value = NULL;
     uint_t              num = 0;
     guint64            *retval = NULL;
+    int                 i;
 
     g_return_val_if_fail( prop_name != NULL && out_num != NULL, retval );
 
@@ -1037,7 +1040,7 @@ get_nwam_known_wlan_uint64_array_prop( nwam_known_wlan_handle_t known_wlan, cons
     }
 
     retval = (guint64*)g_malloc( sizeof(guint64) * num );
-    for ( int i = 0; i < num; i++ ) {
+    for ( i = 0; i < num; i++ ) {
         retval[i] = (guint64)value[i];
     }
 

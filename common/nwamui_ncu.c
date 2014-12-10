@@ -895,6 +895,7 @@ populate_ip_ncu_data( NwamuiNcu *ncu, nwam_ncu_handle_t nwam_ncu )
     guint64          *ipv6_addrsrc     = NULL;
     guint             ipv6_addrsrc_num = 0;
     gchar**           ipv6_addr        = NULL;
+    int               ip_n;
     
     ip_version = get_nwam_ncu_uint64_array_prop( nwam_ncu, 
                                                  NWAM_NCU_PROP_IP_VERSION, 
@@ -909,7 +910,7 @@ populate_ip_ncu_data( NwamuiNcu *ncu, nwam_ncu_handle_t nwam_ncu )
     prv->ipv6_active = FALSE;
     gtk_list_store_clear(prv->v6addresses);
 
-    for ( int ip_n = 0; ip_n < ip_version_num; ip_n++ ) {
+    for ( ip_n = 0; ip_n < ip_version_num; ip_n++ ) {
         if (ip_version[ip_n] == IPV4_VERSION) {
             char **ptr;
             gint   i;
@@ -1141,6 +1142,7 @@ nwamui_ncu_sync_handle_with_ip_data( NwamuiNcu *self )
         GList              *ipv4_list;
         guint               addr_index;
         gboolean            dhcp = self->prv->ipv4_has_dhcp;
+        GList               *elem;
 
         ip_version[ip_version_num] = (uint64_t)IPV4_VERSION;
         ip_version_num++;
@@ -1162,7 +1164,7 @@ nwamui_ncu_sync_handle_with_ip_data( NwamuiNcu *self )
 
         /* How handle all static addresses */
         addr_index = 0;
-        for ( GList* elem = g_list_first(ipv4_list);
+        for ( elem = g_list_first(ipv4_list);
               elem != NULL;
               elem = g_list_next(elem) ) {
             NwamuiIp*   ip = NWAMUI_IP(elem->data);
@@ -1204,7 +1206,7 @@ nwamui_ncu_sync_handle_with_ip_data( NwamuiNcu *self )
         guint               ipv6_addrsrc_num = 0;
         guint               ipv6_addr_num = 0;
         gchar             **ipv6_addr = NULL;
-        GList              *ipv6_list;
+        GList              *ipv6_list,*elem;
         guint               addr_index;
         gboolean            autoconf = self->prv->ipv6_has_auto_conf;
         gboolean            dhcp = self->prv->ipv6_has_dhcp;
@@ -1232,7 +1234,7 @@ nwamui_ncu_sync_handle_with_ip_data( NwamuiNcu *self )
         ipv6_addr = (gchar**)g_malloc((ipv6_addr_num + 1 ) * sizeof(gchar**)); /* +1 for NULL */
 
         addr_index = 0;
-        for ( GList* elem = g_list_first(ipv6_list);
+        for ( elem = g_list_first(ipv6_list);
               elem != NULL;
               elem = g_list_next(elem) ) {
             NwamuiIp*   ip = NWAMUI_IP(elem->data);
@@ -1391,6 +1393,7 @@ nwamui_object_real_clone(NwamuiObject *object, const gchar *name, NwamuiObject *
     NwamuiNcuPrivate  *new_prv = NULL;
     nwam_ncp_handle_t  nwam_ncp;
     nwam_error_t       nerr;
+    nwam_ncu_class_t   i;
 
     g_assert(NWAMUI_IS_NCU(object));
     g_assert(NWAMUI_IS_NCP(parent));
@@ -1405,7 +1408,7 @@ nwamui_object_real_clone(NwamuiObject *object, const gchar *name, NwamuiObject *
 
     nwam_ncp = nwamui_ncp_get_nwam_handle( ncp );
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         if (prv->ncu_handles[i] != NULL) {
             nwam_ncu_handle_t  nwam_ncu_handle;
 
@@ -1453,7 +1456,7 @@ nwamui_object_real_clone(NwamuiObject *object, const gchar *name, NwamuiObject *
      * because ncu clone also call reload, then will cause the cloned object
      * can't be committed.
      */
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         new_prv->ncu_modified[i] = TRUE;
     }
 
@@ -1501,6 +1504,7 @@ nwamui_object_real_reload(NwamuiObject* object)
 {
     NwamuiNcuPrivate  *prv  = NWAMUI_NCU_GET_PRIVATE(object);
     NwamuiNcu         *self = NWAMUI_NCU(object);
+    nwam_ncu_class_t  i;
 
     nwamui_object_real_open(object, prv->device_name, NWAMUI_OBJECT_OPEN);
 
@@ -1524,7 +1528,7 @@ nwamui_object_real_reload(NwamuiObject* object)
      * because ncu clone also call reload, then will cause the cloned object
      * can't be committed.
      */
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         prv->ncu_modified[i] = FALSE;
     }
 
@@ -1540,10 +1544,11 @@ nwamui_object_real_has_modifications(NwamuiObject* object)
 {
     NwamuiNcuPrivate *prv = NWAMUI_NCU_GET_PRIVATE(object);
     gboolean modified;
+    nwam_ncu_class_t i;
 
     g_return_val_if_fail(NWAMUI_IS_NCU(object), FALSE);
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         modified = modified || prv->ncu_modified[i];
     }
     return modified;
@@ -1609,10 +1614,11 @@ nwamui_object_real_validate(NwamuiObject *object, gchar **prop_name_ret)
     NwamuiNcu        *self      = NWAMUI_NCU(object);
     nwam_error_t      nerr;
     const char*       prop_name = NULL;
+    nwam_ncu_class_t  i;
 
     g_return_val_if_fail(NWAMUI_IS_NCU(object), FALSE);
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         if (prv->ncu_modified[i] && prv->ncu_handles[i] != NULL) {
             if ((nerr = nwam_ncu_validate(prv->ncu_handles[i], &prop_name)) != NWAM_SUCCESS) {
                 g_debug("Failed when validating '%d' NCU for %s : invalid value for %s",
@@ -1639,13 +1645,14 @@ nwamui_object_real_commit( NwamuiObject *object )
     nwam_error_t      nerr;
     gboolean          currently_enabled;
     nwamui_cond_activation_mode_t  activation_mode;
+    nwam_ncu_class_t i;
 
     g_return_val_if_fail(NWAMUI_IS_NCU(object), FALSE);
 
     activation_mode = (nwamui_cond_activation_mode_t)
       get_nwam_ncu_uint64_prop( prv->ncu_handles[NWAM_NCU_CLASS_PHYS], NWAM_NCU_PROP_ACTIVATION_MODE );
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         if (prv->ncu_modified[i] && prv->ncu_handles[i] != NULL) {
 
             if (i == NWAM_NCU_CLASS_IP) {
@@ -1685,10 +1692,11 @@ nwamui_object_real_destroy( NwamuiObject *object )
 {
     NwamuiNcuPrivate *prv = NWAMUI_NCU_GET_PRIVATE(object);
     nwam_error_t    nerr;
+    nwam_ncu_class_t i;
 
     g_return_val_if_fail( NWAMUI_IS_NCU(object), FALSE );
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         if (prv->ncu_handles[i] != NULL) {
             if ((nerr = nwam_ncu_destroy(prv->ncu_handles[i], 0)) != NWAM_SUCCESS) {
                 g_warning("Failed when destroying '%d' NCU for %s", i, prv->device_name);
@@ -1707,6 +1715,7 @@ nwamui_object_real_open(NwamuiObject *object, const gchar *name, gint flag)
     NwamuiNcuPrivate *prv = NWAMUI_NCU_GET_PRIVATE(object);
     nwam_ncp_handle_t ncp_handle;
     nwam_error_t      nerr;
+    nwam_ncu_class_t i;
 
     g_assert(name);
 
@@ -1714,7 +1723,7 @@ nwamui_object_real_open(NwamuiObject *object, const gchar *name, gint flag)
 
     if (flag == NWAMUI_OBJECT_CREATE) {
 
-        for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+        for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
             nerr = nwam_ncu_create(ncp_handle, name,
               nwam_ncu_class_to_type(i), i, &prv->ncu_handles[i]);
 
@@ -1727,8 +1736,9 @@ nwamui_object_real_open(NwamuiObject *object, const gchar *name, gint flag)
         }
     } else if (flag == NWAMUI_OBJECT_OPEN) {
         nwam_ncu_handle_t  handle;
+        nwam_ncu_class_t i;
 
-        for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+        for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
             nerr = nwam_ncu_read(ncp_handle, name,
               nwam_ncu_class_to_type(i), 0, &handle);
 
@@ -2063,10 +2073,11 @@ nwamui_object_real_set_active (NwamuiObject *object, gboolean active)
 {
     NwamuiNcuPrivate              *prv  = NWAMUI_NCU_GET_PRIVATE(object);
     nwam_error_t nerr;
+    nwam_ncu_class_t i;
 
     g_return_if_fail (NWAMUI_IS_NCU(object));
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         /* Activate immediately */
         if (prv->ncu_handles[i]) {
             set_enabled_flag(NWAMUI_NCU(object), prv->ncu_handles[i], active);
@@ -2721,6 +2732,7 @@ nwamui_object_real_set_activation_mode (NwamuiObject *object, gint activation_mo
     NwamuiNcu *self = NWAMUI_NCU(object);
     gboolean currently_enabled;
     nwam_error_t    nerr;
+    nwam_ncu_class_t i;
 
     g_return_if_fail (NWAMUI_IS_NCU (self));
     g_assert (activation_mode >= NWAMUI_COND_ACTIVATION_MODE_MANUAL && activation_mode < NWAMUI_COND_ACTIVATION_MODE_LAST );
@@ -2731,7 +2743,7 @@ nwamui_object_real_set_activation_mode (NwamuiObject *object, gint activation_mo
          * the phys/ip/iptun before change it, otherwise enabled will become
          * a readonly property.
          */
-        for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+        for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
             currently_enabled = get_nwam_ncu_boolean_prop(self->prv->ncu_handles[i], NWAM_NCU_PROP_ENABLED);
             if (!currently_enabled) {
                 if ((nerr = nwam_ncu_enable(self->prv->ncu_handles[i])) != NWAM_SUCCESS ) {
@@ -2781,12 +2793,13 @@ nwamui_object_real_set_enabled(NwamuiObject *object, gboolean enabled)
 {
     NwamuiNcu *self = NWAMUI_NCU(object);
     g_return_if_fail (NWAMUI_IS_NCU (self));
+    nwam_ncu_class_t i;
 
     if (self->prv->enabled != enabled) {
         self->prv->enabled = enabled;
         g_object_notify(G_OBJECT(object), "enabled" );
         /* doo#16546 Make sure set_enabled happens on every object. */
-        for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+        for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
             set_modified_flag(self, i, TRUE );
         }
     }
@@ -3052,6 +3065,7 @@ static void
 nwamui_ncu_finalize (NwamuiNcu *self)
 {
     NwamuiNcuPrivate *prv  = NWAMUI_NCU_GET_PRIVATE(self);
+    nwam_ncu_class_t i;
 
     if (prv->v4addresses != NULL ) {
         g_object_unref( G_OBJECT(prv->v4addresses) );
@@ -3081,7 +3095,7 @@ nwamui_ncu_finalize (NwamuiNcu *self)
         g_object_unref(prv->ipv6_zero_ip);
     }
 
-    for (nwam_ncu_class_t i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
+    for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
         if (prv->ncu_handles[i]) {
             nwam_ncu_free(prv->ncu_handles[i]);
         }
@@ -3546,8 +3560,9 @@ get_nwam_ncu_string_array_prop( nwam_ncu_handle_t ncu, const char* prop_name, gu
         /* Create a NULL terminated list of stirngs, allocate 1 extra place
          * for NULL termination. */
         retval = (gchar**)g_malloc0( sizeof(gchar*) * (num+1) );
+        int i;
 
-        for (int i = 0; i < num; i++ ) {
+        for (i = 0; i < num; i++ ) {
             retval[i]  = g_strdup ( value[i] );
         }
         retval[num]=NULL;
@@ -3784,6 +3799,7 @@ get_nwam_ncu_uint64_array_prop( nwam_ncu_handle_t ncu, const char* prop_name , g
     uint64_t           *value = NULL;
     uint_t              num = 0;
     guint64            *retval = NULL;
+    int                 i;
 
     g_return_val_if_fail( prop_name != NULL && out_num != NULL, retval );
 
@@ -3808,7 +3824,7 @@ get_nwam_ncu_uint64_array_prop( nwam_ncu_handle_t ncu, const char* prop_name , g
     }
 
     retval = (guint64*)g_malloc( sizeof(guint64) * num );
-    for ( int i = 0; i < num; i++ ) {
+    for ( i = 0; i < num; i++ ) {
         retval[i] = (guint64)value[i];
     }
 
@@ -3946,6 +3962,7 @@ nwamui_ncu_has_dhcp_configured( NwamuiNcu *ncu, gboolean *ipv4_has_dhcp, gboolea
     guint               ipv6_addrsrc_num = 0;
     guint64            *ipv6_addrsrc =  NULL;
     gchar**             ipv6_addr = NULL;
+    int                 ip_n;
 
     ip_version = get_nwam_ncu_uint64_array_prop( ncu->prv->ncu_handles[NWAM_NCU_CLASS_IP], 
                                                  NWAM_NCU_PROP_IP_VERSION, 
@@ -3961,13 +3978,15 @@ nwamui_ncu_has_dhcp_configured( NwamuiNcu *ncu, gboolean *ipv4_has_dhcp, gboolea
         *ipv6_has_dhcp = FALSE;
     }
 
-    for ( int ip_n = 0; ip_n < ip_version_num; ip_n++ ) {
+    for ( ip_n = 0; ip_n < ip_version_num; ip_n++ ) {
         if (ip_version[ip_n] == IPV4_VERSION) {
+            int i;
+
             ipv4_addrsrc = get_nwam_ncu_uint64_array_prop( ncu->prv->ncu_handles[NWAM_NCU_CLASS_IP], 
                                                            NWAM_NCU_PROP_IPV4_ADDRSRC, 
                                                            &ipv4_addrsrc_num );
 
-            for( int i = 0; i < ipv4_addrsrc_num; i++ ) {
+            for( i = 0; i < ipv4_addrsrc_num; i++ ) {
                 if ( ipv4_addrsrc[i] == NWAM_ADDRSRC_DHCP ) {
                     if ( ipv4_has_dhcp != NULL ) {
                         *ipv4_has_dhcp = TRUE;
@@ -3977,11 +3996,13 @@ nwamui_ncu_has_dhcp_configured( NwamuiNcu *ncu, gboolean *ipv4_has_dhcp, gboolea
             g_free(ipv4_addrsrc);
         }
         else if (ip_version[ip_n] == IPV6_VERSION) {
+            int i;
+
             ipv6_addrsrc = get_nwam_ncu_uint64_array_prop(  ncu->prv->ncu_handles[NWAM_NCU_CLASS_IP], 
                                                             NWAM_NCU_PROP_IPV6_ADDRSRC, 
                                                             &ipv6_addrsrc_num );
 
-            for( int i = 0; i < ipv6_addrsrc_num; i++ ) {
+            for( i = 0; i < ipv6_addrsrc_num; i++ ) {
                 if ( ipv6_addrsrc[i] == NWAM_ADDRSRC_AUTOCONF ) {
                     if ( ipv6_autoconf != NULL ) {
                         *ipv6_autoconf = TRUE;

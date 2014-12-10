@@ -1099,8 +1099,9 @@ nwamui_object_real_commit( NwamuiObject *object )
     }
 
     if (nwamui_object_real_is_modifiable(object)) {
+        GList* ncu_item;
 
-        for(GList* ncu_item = g_list_first(prv->ncu_list);
+        for(ncu_item = g_list_first(prv->ncu_list);
             ncu_item;
             ncu_item = g_list_next(ncu_item)) {
             NwamuiObject *ncu = NWAMUI_OBJECT(ncu_item->data);

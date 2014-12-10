@@ -270,6 +270,7 @@ main(int argc, char** argv)
         debug_response_id( responseid );
     }
     else else if ( show_all_widgets ) { /* Show All */
+        int i;
         gchar*  dialog_names[] = { 
                 "nwam_capplet", "nwam_environment",
                 "add_wireless_network", "connect_wireless_network",
@@ -277,7 +278,7 @@ main(int argc, char** argv)
                 NULL
         };
         
-        for (int i = 0; dialog_names[i] != NULL; i++) {
+        for (i = 0; dialog_names[i] != NULL; i++) {
             GtkWidget*  dialog = NULL;
 
             /* get a widget (useful if you want to change something) */

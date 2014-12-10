@@ -261,12 +261,13 @@ static void
 nwam_capplet_dialog_finalize(NwamCappletDialog *self)
 {
     NwamCappletDialogPrivate *prv = NWAM_CAPPLET_DIALOG_GET_PRIVATE(self);
+    int i;
 
     g_object_unref(G_OBJECT(prv->capplet_dialog));
     g_object_unref(G_OBJECT(prv->show_combo));
     g_object_unref(G_OBJECT(prv->main_nb));
 
-	for (int i = 0; i < N_PANELS; i ++) {
+	for (i = 0; i < N_PANELS; i ++) {
 		if (prv->panel[i]) {
 			g_object_unref(G_OBJECT(prv->panel[i]));
 		}

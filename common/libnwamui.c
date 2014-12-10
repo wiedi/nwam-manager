@@ -45,6 +45,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <ifaddrs.h>
+#include <strings.h>
 
 #define NWAM_ENVIRONMENT_RENAME     "nwam_environment_rename"
 #define RENAME_ENVIRONMENT_ENTRY    "rename_environment_entry"
@@ -1060,8 +1061,9 @@ nwamui_util_confirm_removal(GtkWindow* parent_window, const gchar* title, const 
     /* Change OK to be Remove button */
     if ( (action_area = gtk_dialog_get_action_area( GTK_DIALOG(message_dialog) )) != NULL ) {
         GList*  buttons = gtk_container_get_children( GTK_CONTAINER( action_area ) );
+	GList *elem;
 
-        for ( GList *elem = buttons; buttons != NULL; elem = g_list_next(elem) ) {
+        for ( elem = buttons; buttons != NULL; elem = g_list_next(elem) ) {
             if ( GTK_IS_BUTTON( elem->data ) ) {
                 const gchar* label = gtk_button_get_label( GTK_BUTTON( elem->data ) );
                 if ( label != NULL && strcmp( label, GTK_STOCK_OK )  == 0 ) {
@@ -1123,8 +1125,9 @@ nwamui_util_ask_about_dup_obj(GtkWindow* parent_window, NwamuiObject* obj )
     /* Change OK to be Duplicate button */
     if ( (action_area = gtk_dialog_get_action_area( GTK_DIALOG(message_dialog) )) != NULL ) {
         GList*  buttons = gtk_container_get_children( GTK_CONTAINER( action_area ) );
+        GList *elem;
 
-        for ( GList *elem = buttons; buttons != NULL; elem = g_list_next(elem) ) {
+        for ( elem = buttons; buttons != NULL; elem = g_list_next(elem) ) {
             if ( GTK_IS_BUTTON( elem->data ) ) {
                 const gchar* label = gtk_button_get_label( GTK_BUTTON( elem->data ) );
                 if ( label != NULL && strcmp( label, GTK_STOCK_OK )  == 0 ) {
@@ -1227,13 +1230,14 @@ nwamui_util_set_widget_a11y_info(   GtkWidget      *widget,
 extern GList*
 nwamui_util_map_condition_strings_to_object_list( char** conditions )
 {
+    int i;
     GList*  new_list = NULL;
 
     if ( conditions == NULL ) {
         return( NULL );
     }
 
-    for ( int i = 0; conditions[i] != NULL; i++ ) {
+    for ( i = 0; conditions[i] != NULL; i++ ) {
         NwamuiCond* cond = nwamui_cond_new_from_str( conditions[i] );
         if ( cond != NULL ) {
             new_list = g_list_append( new_list, cond);
@@ -1249,6 +1253,7 @@ nwamui_util_map_object_list_to_condition_strings( GList* conditions, guint *len 
     gchar** cond_strs = NULL;
     guint   count = 0;
     GList*  elem = NULL;
+    int i;
 
     if ( conditions == NULL || len == NULL ) {
         return( NULL );
@@ -1264,7 +1269,7 @@ nwamui_util_map_object_list_to_condition_strings( GList* conditions, guint *len 
 
     *len = 0;
     elem = g_list_first(conditions);
-    for ( int i = 0; elem && i < count; i++ ) {
+    for ( i = 0; elem && i < count; i++ ) {
         if ( elem->data != NULL && NWAMUI_IS_COND( elem->data ) ) {
             gchar* cond_str = nwamui_cond_to_string( NWAMUI_COND(elem->data) );
             if ( cond_str != NULL ) {
@@ -1283,8 +1288,9 @@ extern GList*
 nwamui_util_strv_to_glist( gchar **strv ) 
 {
     GList   *new_list = NULL;
+    char** strp;
 
-    for ( char** strp = strv; strp != NULL && *strp != NULL && **strp != '\0'; strp++ ) {
+    for ( strp = strv; strp != NULL && *strp != NULL && **strp != '\0'; strp++ ) {
         new_list = g_list_append( new_list, g_strdup( *strp ) );
     }
 
@@ -1299,11 +1305,12 @@ nwamui_util_glist_to_strv( GList *list )
     if ( list != NULL ) {
         int     list_len = g_list_length( list );
         int     i = 0;
+        GList *element;
 
         new_strv = (gchar**)g_malloc0( sizeof(gchar*) * (list_len+1) );
 
         i = 0;
-        for ( GList *element  = g_list_first( list );
+        for ( element  = g_list_first( list );
               element != NULL && element->data != NULL;
               element = g_list_next( element ) ) {
             new_strv[i]  = g_strdup ( element->data );
@@ -1335,7 +1342,9 @@ nwamui_util_encode_menu_label( gchar **modified_label )
          * provides to possibility that it may grow.
          */
         GString *gstr = g_string_sized_new( strlen(*modified_label + 2 ) );
-        for ( gchar *c = *modified_label; c != NULL && *c != '\0'; c++ ) {
+        gchar *c;
+
+        for ( c = *modified_label; c != NULL && *c != '\0'; c++ ) {
             if ( *c == '_' ) {
                 /* add extra underscore */
                 g_string_append_c( gstr, '_' );
@@ -1737,7 +1746,7 @@ nwamui_util_get_interface_address(const char *ifname, sa_family_t family,
         freeifaddrs(ifap);
         return TRUE;
     } else {
-        g_debug("getifaddrs failed:", g_strerror(errno));
+        g_debug("getifaddrs failed: %s", g_strerror(errno));
     }
     return FALSE;
 }
@@ -1771,12 +1780,16 @@ foreach_service( GFunc callback, gpointer user_data )
 
     if ( scf_handle_get_scope( handle, SCF_SCOPE_LOCAL, scope ) == 0 ) {
         if ( scf_iter_scope_services( svc_iter, scope ) == 0 ) {
-            for ( int r = scf_iter_next_service( svc_iter, service );
+            int r;
+
+            for ( r = scf_iter_next_service( svc_iter, service );
                   r == 1;
                   r = scf_iter_next_service( svc_iter, service ) ) {
                 if( scf_service_get_name( service, sname, max_scf_name_length + 1) != -1 ) {
                     if ( scf_iter_service_instances( inst_iter, service ) == 0 ) {
-                        for ( int rv = scf_iter_next_instance( inst_iter, instance );
+                        int rv;
+
+                        for ( rv = scf_iter_next_instance( inst_iter, instance );
                               rv == 1;
                               rv = scf_iter_next_instance( inst_iter, instance ) ) {
                             if ( scf_instance_get_name( instance, name, max_scf_name_length + 1) != -1 ) {
@@ -1878,6 +1891,7 @@ insert_entry_valid_text_handler (GtkEditable *editable,
     gboolean    is_valid = TRUE;
     gchar      *lower = g_ascii_strdown(text, length);
     nwamui_entry_validation_flags_t  flags;
+    int         i;
 
     flags = (gboolean)g_object_get_data( G_OBJECT(editable), "validation_flags" );
 
@@ -1888,7 +1902,7 @@ insert_entry_valid_text_handler (GtkEditable *editable,
     allow_list = (flags & NWAMUI_ENTRY_VALIDATION_ALLOW_LIST);
     allow_prefix = (flags & NWAMUI_ENTRY_VALIDATION_ALLOW_PREFIX);
 
-    for ( int i = 0; i < length && is_valid; i++ ) {
+    for ( i = 0; i < length && is_valid; i++ ) {
         if ( allow_list && (text[i] == ',' || text[i] == ' ') ) {
             /* Allow comma-separated list mode to be entered */
             is_valid = TRUE;
@@ -1977,11 +1991,12 @@ nwamui_util_validate_text_entry(    GtkWidget           *widget,
         /* Split list and call self recursively */
         nwamui_entry_validation_flags_t     no_list_flags;
         gchar                             **entries = NULL;
+        int                                 i;
 
         no_list_flags = flags & (~ NWAMUI_ENTRY_VALIDATION_ALLOW_LIST); /* Turn off allow list flag */
         entries = g_strsplit_set(text, ", ", 0 );
 
-        for( int i = 0; entries && entries[i] != NULL; i++ ) {
+        for( i = 0; entries && entries[i] != NULL; i++ ) {
             /* Skip blank entries caused by combination of comma and space */
             if ( strlen( entries[i] ) == 0 ) {
                 continue;
@@ -2254,10 +2269,11 @@ nwamui_util_parse_string_to_glist( const gchar* str )
 {
     GList      *list = NULL;
     gchar     **words = NULL;
+    int         i;
 
     words = g_strsplit_set(str, LIST_DELIM, 0 );
 
-    for( int i = 0; words && words[i] != NULL; i++ ) {
+    for( i = 0; words && words[i] != NULL; i++ ) {
         /* Skip empty entries caused by delims side by side (e.g ', ') */
         if ( strlen( words[i] ) != 0 ) {
             list = g_list_append( list, (gpointer)words[i] );

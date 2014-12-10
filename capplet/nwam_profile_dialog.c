@@ -2000,8 +2000,10 @@ connections_edit_btn_clicked(GtkButton *button, gpointer user_data )
     switch (result)
     {
     case GTK_RESPONSE_OK: {
+        GList *elem, *selected;
+
         /* Handle the updated prv->ncu_selection */
-        for (GList *elem = g_list_first(prv->ncu_rm_list);
+        for (elem = g_list_first(prv->ncu_rm_list);
              elem != NULL;
              elem = g_list_delete_link(elem, elem)) {
             NwamuiObject *ncu      = NULL;
@@ -2022,7 +2024,7 @@ connections_edit_btn_clicked(GtkButton *button, gpointer user_data )
         prv->ncu_rm_list = NULL;
 
         /* Need to add new ncus to this */
-        for (GList *selected = g_list_first(prv->ncu_list);
+        for (selected = g_list_first(prv->ncu_list);
              selected;
              selected = g_list_delete_link(selected, selected)) {
 

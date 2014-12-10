@@ -1320,7 +1320,9 @@ nwamui_wifi_net_real_set_bssid_list(NwamuiWifiNet *self, GList *bssid_list)
     /* Merge lists */
     if ( fav_bssid_list != NULL ) {
         if ( bssid_list != NULL ) {
-            for (GList *elem = g_list_first(fav_bssid_list);
+            GList *elem;
+
+            for (elem = g_list_first(fav_bssid_list);
                  elem != NULL;
                  elem = g_list_next(elem) ) {
                 if ( elem->data != NULL ) {
@@ -1373,7 +1375,9 @@ nwamui_wifi_net_real_get_bssid_list(NwamuiWifiNet *self)
             bssid_list = fav_bssid_list;
         }
         else {
-            for (GList *elem = g_list_first(fav_bssid_list);
+            GList *elem;
+
+            for (elem = g_list_first(fav_bssid_list);
                  elem != NULL;
                  elem = g_list_next(elem) ) {
                 if ( elem->data != NULL ) {
