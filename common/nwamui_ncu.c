@@ -1658,9 +1658,7 @@ nwamui_object_real_commit( NwamuiObject *object )
             if (i == NWAM_NCU_CLASS_IP) {
                 nwamui_ncu_sync_handle_with_ip_data(self);
                 /* doo 12653, if user disable both ipv4/v6, disable IP NCU simplely. */
-                if (!prv->ipv4_active && !prv->ipv6_active) {
-                    prv->enabled = FALSE;
-                }
+                prv->enabled = (prv->ipv4_active || prv->ipv6_active);
             }
 
             if ((nerr = nwam_ncu_commit(prv->ncu_handles[i], 0)) != NWAM_SUCCESS) {
@@ -2798,10 +2796,7 @@ nwamui_object_real_set_enabled(NwamuiObject *object, gboolean enabled)
     if (self->prv->enabled != enabled) {
         self->prv->enabled = enabled;
         g_object_notify(G_OBJECT(object), "enabled" );
-        /* doo#16546 Make sure set_enabled happens on every object. */
-        for (i = 0; i < NWAM_NCU_CLASS_ANY; i++) {
-            set_modified_flag(self, i, TRUE );
-        }
+        set_modified_flag( self, NWAM_NCU_CLASS_PHYS, TRUE );
     }
 }
 
