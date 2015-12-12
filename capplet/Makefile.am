@@ -40,6 +40,7 @@ AM_LDFLAGS = \
 	$(DLADM_LIBS)		\
 	$(KSTAT_LIBS)		\
 	$(SCF_LIBS)		\
+	$(SECDB_LIBS)		\
 	$(NWAM_MANAGER_LIBS)		\
 	$(NULL)
 
