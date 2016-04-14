@@ -226,12 +226,7 @@ get_notification( void )
     }
     if ( always_new || notification == NULL ) {
         
-        if ( with_status_icon ) {
-            notification = notify_notification_new_with_status_icon(" ", " ", NULL, parent_status_icon  );
-        }
-        else {
-            notification = notify_notification_new(" ", " ", NULL, NULL  );
-        }
+        notification = notify_notification_new(" ", " ", NULL );
 
         g_signal_connect(notification, "closed",
           G_CALLBACK(on_notification_closed),
